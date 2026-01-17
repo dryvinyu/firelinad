@@ -132,7 +132,7 @@ export default function RunnerStatus({
           <div className="flex gap-2">
             <button
               onClick={() => onModeChange('AUTO')}
-              className={`px-3 py-1 text-xs font-bold rounded transition-all ${
+              className={`px-3 py-1 text-xs text-white font-bold rounded transition-all ${
                 mode === 'AUTO'
                   ? 'bg-console-accent text-black shadow-[0_0_15px_rgba(0,255,200,0.5)]'
                   : 'bg-console-muted text-muted-foreground hover:text-console-text'
