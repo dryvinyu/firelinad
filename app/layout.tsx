@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="no-scrollbar">
       <body className={`${fira.variable} antialiased`}>
         <main className="p-6 hex-pattern">
           <Header />
