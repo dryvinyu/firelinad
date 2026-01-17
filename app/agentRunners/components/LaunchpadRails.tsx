@@ -1,103 +1,33 @@
-import { useState, useEffect, useCallback } from 'react'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { TRACKS, type ActionTx } from '@/app/agentRunners/data'
 
-interface LaunchOrb {
-  id: number
-  code: string
-  description: string
-  status: 'pending' | 'launching' | 'success' | 'failed'
-  railIndex: number
-  delay: number
+type LaunchpadRailsProps = {
+  txs: ActionTx[]
+  actionLabels: Record<string, { label: string; tooltip: string }>
 }
 
-const orbData = [
-  { code: 'PA', description: 'Pause liquidity pool' },
-  { code: 'WL', description: 'Limit withdrawals' },
-  { code: 'SN', description: 'Create state snapshot' },
-  { code: 'FO', description: 'Freeze oracle' },
-  { code: 'IS', description: 'Isolate external calls' },
-  { code: 'LK', description: 'Lock governance' },
-  { code: 'RV', description: 'Revert pending txs' },
-  { code: 'BR', description: 'Broadcast alert' },
-  { code: 'VL', description: 'Validate reserves' },
-  { code: 'HT', description: 'Halt trading' },
-  { code: 'CB', description: 'Circuit breaker' },
-  { code: 'AU', description: 'Audit trail' },
-]
-
-const RAIL_COUNT = 12
-
-export default function LaunchpadRails() {
-  const [orbs, setOrbs] = useState<LaunchOrb[]>([])
-  const [launched, setLaunched] = useState(false)
-
-  useEffect(() => {
-    // Initialize orbs - one per rail
-    const initialOrbs: LaunchOrb[] = orbData.map((data, index) => ({
-      id: index,
-      code: data.code,
-      description: data.description,
-      status: 'pending',
-      railIndex: index,
-      delay: Math.random() * 300 + index * 50,
-    }))
-    setOrbs(initialOrbs)
-  }, [])
-
-  const handleLaunch = useCallback(() => {
-    if (launched) return
-    setLaunched(true)
-
-    // Simulate parallel launches with some failures
-    orbs.forEach((orb) => {
-      setTimeout(() => {
-        const willFail = Math.random() < 0.25 // 25% failure rate
-
-        setOrbs((prev) =>
-          prev.map((o) =>
-            o.id === orb.id ? { ...o, status: 'launching' } : o,
-          ),
-        )
-
-        setTimeout(
-          () => {
-            setOrbs((prev) =>
-              prev.map((o) =>
-                o.id === orb.id
-                  ? { ...o, status: willFail ? 'failed' : 'success' }
-                  : o,
-              ),
-            )
-          },
-          willFail ? 1200 : 2000,
-        )
-      }, orb.delay)
-    })
-  }, [launched, orbs])
-
-  // Expose launch function globally for the Sign button
-  useEffect(() => {
-    ;(window as any).triggerLaunch = handleLaunch
-    return () => {
-      delete (window as any).triggerLaunch
-    }
-  }, [handleLaunch])
-
+export default function LaunchpadRails({
+  txs,
+  actionLabels,
+}: LaunchpadRailsProps) {
   return (
     <div className="relative w-full h-[420px] flex flex-col">
       {/* Launch area with rails */}
       <div className="flex-1 relative flex items-end justify-center px-8">
         {/* Rails container */}
         <div className="flex items-end justify-center gap-4">
-          {Array.from({ length: RAIL_COUNT }).map((_, index) => {
-            const orb = orbs.find((o) => o.railIndex === index)
-            const isLaunching = orb?.status === 'launching'
-            const isSuccess = orb?.status === 'success'
-            const isFailed = orb?.status === 'failed'
+          {Array.from({ length: TRACKS }).map((_, index) => {
+            const tx = txs[index]
+            const labelMeta = tx ? actionLabels[tx.action] : undefined
+            const label =
+              labelMeta?.label ?? tx?.action?.slice(0, 2).toUpperCase() ?? 'NA'
+            const tooltip = labelMeta?.tooltip ?? 'Unknown action'
+            const isFailed = tx?.status === 'revert'
+            const isSuccess = tx?.status === 'success'
             const isCyan = index % 3 === 1
 
             return (
@@ -118,7 +48,7 @@ export default function LaunchpadRails() {
                 </div>
 
                 {/* Orb */}
-                {orb && (
+                {tx && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div
@@ -128,22 +58,19 @@ export default function LaunchpadRails() {
                             : isCyan
                               ? 'launch-orb-cyan'
                               : 'launch-orb-success'
-                        } ${isLaunching || isSuccess ? 'animate-orb-launch' : ''} ${
+                        } ${isSuccess ? 'animate-orb-launch' : ''} ${
                           isFailed ? 'animate-orb-fail' : ''
                         }`}
-                        style={{
-                          animationDelay: `${orb.delay}ms`,
-                        }}
                       >
-                        {orb.code}
+                        {label}
                       </div>
                     </TooltipTrigger>
                     <TooltipContent
                       side="top"
                       className="bg-card border-primary/40 text-foreground font-mono text-xs px-3 py-2"
                     >
-                      <p className="text-primary font-semibold">{orb.code}</p>
-                      <p className="text-muted-foreground">{orb.description}</p>
+                      <p className="text-primary font-semibold">{label}</p>
+                      <p className="text-muted-foreground">{tooltip}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}

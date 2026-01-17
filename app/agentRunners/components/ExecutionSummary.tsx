@@ -1,15 +1,37 @@
 import { ChevronRight, AlertTriangle } from 'lucide-react'
+import { CRITICAL_ACTIONS } from '@/app/agentRunners/data'
 
-const executionItems = [
-  { text: 'Pause Pool A/B', critical: true },
-  { text: 'Protect 87 users', critical: false },
-  { text: 'Update Oracle feed', critical: true },
-  { text: 'Snapshot system state', critical: false },
-  { text: 'Lock governance', critical: true },
-  { text: 'Broadcast emergency', critical: false },
-]
+type ExecutionSummaryProps = {
+  actionSets: { name: string; items: string[] }[]
+  actionLabels: Record<string, { label: string; tooltip: string }>
+}
 
-export default function ExecutionSummary() {
+type SummaryRow = {
+  key: string
+  text: string
+  critical: boolean
+  type: 'title' | 'item'
+}
+
+export default function ExecutionSummary({
+  actionSets,
+  actionLabels,
+}: ExecutionSummaryProps) {
+  const summaryRows = actionSets.flatMap<SummaryRow>((set, setIndex) => [
+    {
+      key: `${set.name}-${setIndex}-title`,
+      text: set.name,
+      critical: false,
+      type: 'title',
+    },
+    ...set.items.map((item, itemIndex) => ({
+      key: `${set.name}-${item}-${itemIndex}`,
+      text: actionLabels[item]?.tooltip ?? item,
+      critical: CRITICAL_ACTIONS.has(item),
+      type: 'item',
+    })),
+  ])
+
   return (
     <div className="terminal-box h-full flex flex-col">
       <div className="relative z-10 flex-1 flex flex-col">
@@ -28,20 +50,40 @@ export default function ExecutionSummary() {
 
         {/* Execution Items */}
         <div className="space-y-3 font-mono text-sm flex-1">
-          {executionItems.map((item, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 text-foreground/90 group"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <ChevronRight
-                className={`w-3 h-3 ${item.critical ? 'text-warning' : 'text-primary'}`}
-              />
-              <span className={item.critical ? 'text-warning/90' : ''}>
-                {item.text}
-              </span>
+          {summaryRows.length === 0 ? (
+            <div className="text-xs text-muted-foreground">
+              No action sets configured.
             </div>
-          ))}
+          ) : (
+            summaryRows.map((row, index) => (
+              <div
+                key={row.key}
+                className="flex items-center gap-2 text-foreground/90 group"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {row.type === 'item' ? (
+                  <ChevronRight
+                    className={`w-3 h-3 ${
+                      row.critical ? 'text-warning' : 'text-primary'
+                    }`}
+                  />
+                ) : (
+                  <span className="w-3 h-3" />
+                )}
+                <span
+                  className={
+                    row.type === 'title'
+                      ? 'text-[10px] uppercase tracking-widest text-muted-foreground'
+                      : row.critical
+                        ? 'text-warning/90'
+                        : ''
+                  }
+                >
+                  {row.text}
+                </span>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Footer Badge */}
