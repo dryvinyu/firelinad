@@ -11,29 +11,21 @@ type ActionBarProps = {
   lastUpdated?: Date | null
 }
 
-export default function ActionBar({ onRefresh, lastUpdated }: ActionBarProps) {
-  const handleSign = () => {
-    if (onRefresh) {
-      onRefresh()
-    }
-  }
-
+export default function ActionBar({ lastUpdated }: ActionBarProps) {
   return (
     <div className="relative w-full border-t border-border/50 bg-card/30 backdrop-blur-sm">
       <div className="flex items-center justify-between px-8 py-6">
         {/* Left side - Main actions */}
         <div className="flex items-center gap-6">
-          {/* SIGN Button */}
-          <button onClick={handleSign} className="btn-sign group">
+          {/* <button onClick={handleSign} className="btn-sign group">
             <div className="flex flex-col items-center">
               <span className="text-lg">[SIGN]</span>
               <span className="text-[10px] opacity-80 mt-1">
                 Scan & Execute
               </span>
             </div>
-          </button>
+          </button> */}
 
-          {/* IF Button */}
           <button className="btn-if group">
             <div className="flex flex-col items-center">
               <span className="text-base">[ if ]</span>
