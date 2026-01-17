@@ -16,8 +16,8 @@ type TxItem = {
   status: 'pending' | 'success' | 'revert'
 }
 
-const DRAIN_AMOUNT = 150000n
-const PRICE_SHOCK = -300n
+const DRAIN_AMOUNT = BigInt(150000)
+const PRICE_SHOCK = BigInt(-300)
 
 export default function AttackPage() {
   const { signer, account, chainId, isConnected, switchNetwork } = useWallet()

@@ -131,7 +131,11 @@ export default function useAutoRunner({
         ])
 
         for (const log of reserveLogs) {
-          const args = log.args as { oldReserve: bigint; newReserve: bigint }
+          if (!('args' in log)) continue
+          const args = log.args as unknown as {
+            oldReserve: bigint
+            newReserve: bigint
+          }
           const oldReserve = args?.oldReserve
           const newReserve = args?.newReserve
           if (oldReserve === undefined || newReserve === undefined) continue
@@ -143,8 +147,12 @@ export default function useAutoRunner({
             continue
           }
 
-          const drop = oldReserve > newReserve ? oldReserve - newReserve : 0n
-          const dropBps = oldReserve > 0n ? (drop * 10000n) / oldReserve : 0n
+          const drop =
+            oldReserve > newReserve ? oldReserve - newReserve : BigInt(0)
+          const dropBps =
+            oldReserve > BigInt(0)
+              ? (drop * BigInt(10000)) / oldReserve
+              : BigInt(0)
           const blocksPassed =
             block - (reserveStateRef.current.lastBlock ?? block)
 
@@ -161,7 +169,11 @@ export default function useAutoRunner({
         }
 
         for (const log of priceLogs) {
-          const args = log.args as { oldPrice: bigint; newPrice: bigint }
+          if (!('args' in log)) continue
+          const args = log.args as unknown as {
+            oldPrice: bigint
+            newPrice: bigint
+          }
           const oldPrice = args?.oldPrice
           const newPrice = args?.newPrice
           if (oldPrice === undefined || newPrice === undefined) continue
