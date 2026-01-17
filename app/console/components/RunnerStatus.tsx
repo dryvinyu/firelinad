@@ -99,7 +99,7 @@ export default function RunnerStatus({
               className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-yellow-500'}`}
             />
             <span className="text-lg font-bold text-console-text">
-              {chainLabel || 'UNKNOWN'}
+              {chainLabel || 'Monad Testnet'}
             </span>
           </div>
         </div>

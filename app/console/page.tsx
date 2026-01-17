@@ -141,7 +141,7 @@ export default function Console() {
     <section className="console-bg p-4 md:p-6 lg:p-8">
       <RunnerStatus
         isOnline={protocolState.isOnline}
-        chainLabel={protocolState.chainLabel}
+        chainLabel="Monad Testnet(10143)"
         lastBlockTime={protocolState.lastBlockTime}
         emergencyMode={protocolState.emergencyMode}
         paused={protocolState.paused}
