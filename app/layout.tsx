@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${fira.variable} antialiased`}>
-        {children}
+        <main className="p-6 hex-pattern">{children}</main>
         <Toaster richColors position="top-center" />
       </body>
     </html>
