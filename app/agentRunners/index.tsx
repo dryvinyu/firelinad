@@ -1,5 +1,8 @@
 'use client'
+import { useState } from 'react'
 import ActionBar from './components/ActionBar'
+import ChatModal from './components/ChatModal'
+import ChatButton from './components/ChatButton'
 import AgentStatusBar from './components/AgentStatusBar'
 import LaunchpadRails from './components/LaunchpadRails'
 import ExecutionSummary from './components/ExecutionSummary'
@@ -9,9 +12,10 @@ import { ACTION_LABELS, ACTION_SETS } from './data'
 export default function AgentRunners() {
   const { txs, activeAgents, error, lastUpdated, refresh } =
     useControllerActivity()
+  const [isChatOpen, setIsChatOpen] = useState(false)
 
   return (
-    <section className="bg-background cyber-grid scanline flex flex-col">
+    <section className="bg-background cyber-grid scanline flex flex-col relative">
       <AgentStatusBar activeAgents={activeAgents} />
       {error ? (
         <div className="px-6 py-3 text-sm text-destructive/90 border-b border-border/30">
@@ -49,6 +53,12 @@ export default function AgentRunners() {
       </div>
 
       <ActionBar lastUpdated={lastUpdated} onRefresh={refresh} />
+
+      <ChatButton
+        onClick={() => setIsChatOpen(!isChatOpen)}
+        isOpen={isChatOpen}
+      />
+      <ChatModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </section>
   )
 }
