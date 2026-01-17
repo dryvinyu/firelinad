@@ -1,3 +1,5 @@
+import AgentRunners from './agentRunners'
+
 export default function Home() {
-  return <section>home</section>
+  return <AgentRunners />
 }

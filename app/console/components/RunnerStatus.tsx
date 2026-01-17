@@ -187,7 +187,7 @@ export default function RunnerStatus({
         <div
           className={`h-full transition-all duration-1000 ${
             isEnabled && isConnected
-              ? 'bg-gradient-to-r from-console-accent to-cyan-400 animate-[loading_2s_ease-in-out_infinite]'
+              ? 'bg-linear-to-r from-console-accent to-cyan-400 animate-[loading_2s_ease-in-out_infinite]'
               : 'bg-red-500/50 w-0'
           }`}
           style={{ width: isEnabled && isConnected ? '100%' : '0%' }}
