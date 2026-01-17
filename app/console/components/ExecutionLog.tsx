@@ -40,7 +40,8 @@ export default function ExecutionLog({
   }, [logs])
 
   const getExplorerUrl = (txHash: string) => {
-    const baseUrl = explorerBaseUrl || 'https://sepolia.etherscan.io/tx/'
+    const baseUrl =
+      explorerBaseUrl || 'https://monad-testnet.socialscan.io//tx/'
     return `${baseUrl}${txHash}`
   }
 

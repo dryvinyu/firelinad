@@ -5,7 +5,7 @@ contract IncidentSandbox {
     address public owner;
     address public controller;
 
-    // 演示与事故响应用的当前池子状态
+    // Demo state
     bool public paused;
     uint256 public reserve;
     int256 public price;
@@ -32,7 +32,7 @@ contract IncidentSandbox {
         owner = msg.sender;
         reserve = initialReserve;
         price = initialPrice;
-        // 默认不限制提取
+        // Default to no withdraw limit.
         withdrawLimitBps = 10000;
     }
 
@@ -43,7 +43,6 @@ contract IncidentSandbox {
 
     function trade(uint256 amount) external {
         require(!paused, "PAUSED");
-        // 演示用的简单价格/储备更新
         reserve += amount;
         int256 oldPrice = price;
         price = price + int256(amount / 10);
@@ -54,7 +53,6 @@ contract IncidentSandbox {
     function drain(uint256 amount) external {
         require(!paused, "PAUSED");
         _checkWithdrawLimit(amount);
-        // 模拟大额流出事件
         uint256 oldReserve = reserve;
         if (amount >= reserve) {
             reserve = 0;
@@ -66,7 +64,7 @@ contract IncidentSandbox {
     }
 
     function setPriceShock(int256 shock) external {
-        // 施加一次价格冲击
+        require(!paused, "PAUSED");
         int256 oldPrice = price;
         price = price + shock;
         emit PriceUpdated(oldPrice, price, msg.sender);
@@ -89,7 +87,6 @@ contract IncidentSandbox {
         bool newPaused,
         uint256 newWithdrawLimitBps
     ) external onlyOwner {
-        // 重置沙盒状态以便重复演示/测试
         require(newWithdrawLimitBps <= 10000, "BPS_TOO_HIGH");
         uint256 oldReserve = reserve;
         int256 oldPrice = price;
@@ -107,7 +104,6 @@ contract IncidentSandbox {
         if (withdrawLimitBps >= 10000) {
             return;
         }
-        // 按比例限制可提取上限
         uint256 maxOut = (reserve * withdrawLimitBps) / 10000;
         require(amount <= maxOut, "WITHDRAW_LIMIT");
     }

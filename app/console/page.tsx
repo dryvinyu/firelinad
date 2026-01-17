@@ -8,8 +8,10 @@ import RunnerStatus from './components/RunnerStatus'
 import ManualActions from './components/ManualActions'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import RuleParameters from './components/RuleParameters'
+import OwnerActions from './components/OwnerActions'
 import useControllerActivity from '@/app/agentRunners/hooks/useControllerActivity'
 import useProtocolState from '@/lib/hooks/useProtocolState'
+import useAutoRunner from '@/lib/hooks/useAutoRunner'
 import {
   CHAIN_CONFIG,
   CONTRACT_ABIS,
@@ -20,6 +22,7 @@ export default function Console() {
   const { chainId, isConnected, signer, switchNetwork } = useWallet()
   const protocolState = useProtocolState()
   const { txs, error: executionError } = useControllerActivity()
+  const autoRunner = useAutoRunner({ signer, isConnected, chainId })
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean
     action: string
@@ -39,6 +42,8 @@ export default function Console() {
       isolate:
         'This will isolate the affected market from the rest of the protocol.',
       snapshot: 'This will create a state snapshot for potential rollback.',
+      resetSandbox: 'Restore sandbox state and clear pause flag.',
+      resetController: 'Clear emergency flags on the controller.',
     }
 
     setConfirmModal({
@@ -83,6 +88,11 @@ export default function Console() {
         CONTRACT_ABIS.controller,
         signer,
       )
+      const sandbox = new ethers.Contract(
+        CONTRACT_ADDRESSES.sandbox,
+        CONTRACT_ABIS.sandbox,
+        signer,
+      )
 
       const action = confirmModal.action
       if (action === 'pausePool') {
@@ -98,6 +108,22 @@ export default function Console() {
         await controller.isolate()
       } else if (action === 'snapshot') {
         await controller.snapshot()
+      } else if (action === 'resetSandbox') {
+        if (protocolState.reserve === null || protocolState.price === null) {
+          throw new Error('Sandbox state unavailable')
+        }
+        const limit =
+          protocolState.withdrawLimitBps === null
+            ? 10000n
+            : protocolState.withdrawLimitBps
+        await sandbox.resetDemoState(
+          protocolState.reserve,
+          protocolState.price,
+          false,
+          limit,
+        )
+      } else if (action === 'resetController') {
+        await controller.resetController()
       } else {
         throw new Error('Unknown action')
       }
@@ -129,6 +155,9 @@ export default function Console() {
         <RuleParameters state={protocolState} />
         <ManualActions onAction={handleManualAction} />
       </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <OwnerActions onAction={handleManualAction} />
+      </div>
 
       {actionError ? (
         <div className="mb-4 text-sm text-destructive/80">{actionError}</div>
@@ -136,6 +165,12 @@ export default function Console() {
 
       {executionError ? (
         <div className="mb-4 text-sm text-destructive/80">{executionError}</div>
+      ) : null}
+
+      {autoRunner.error ? (
+        <div className="mb-4 text-sm text-destructive/80">
+          {autoRunner.error}
+        </div>
       ) : null}
 
       <ExecutionLog

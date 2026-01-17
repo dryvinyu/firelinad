@@ -13,8 +13,19 @@ import {
   CONTRACT_ADDRESSES,
 } from '@/lib/contracts'
 
-const POLL_INTERVAL_MS = 6000
-const LOOKBACK_BLOCKS = 5
+const POLL_INTERVAL_MS = 10000
+const LOOKBACK_BLOCKS = 50
+const ACTION_NAME_MAP: Record<string, string> = {
+  pause: 'pausePool',
+  limit: 'setWithdrawLimit',
+  freezeOracle: 'freezeOracle',
+  isolate: 'isolate',
+}
+const SANDBOX_EVENT_MAP: Record<string, string> = {
+  PriceUpdated: 'priceShock',
+  ReserveChanged: 'reserveChange',
+  LargeOutflow: 'drain',
+}
 
 export default function useControllerActivity() {
   const [txs, setTxs] = useState<ActionTx[]>([])
@@ -34,11 +45,6 @@ export default function useControllerActivity() {
     }
     return null
   }, [])
-
-  const controllerInterface = useMemo(
-    () => new ethers.Interface(CONTRACT_ABIS.controller),
-    [],
-  )
 
   const markAgentsForAction = useCallback((action: string) => {
     const now = Date.now()
@@ -80,57 +86,114 @@ export default function useControllerActivity() {
           ? Math.max(blockNumber - LOOKBACK_BLOCKS, 0)
           : lastBlockRef.current + 1
 
-      for (let bn = start; bn <= blockNumber; bn += 1) {
-        const block = await provider.getBlock(bn, true)
-        if (!block || !block.transactions) {
+      const controller = new ethers.Contract(
+        CONTRACT_ADDRESSES.controller,
+        CONTRACT_ABIS.controller,
+        provider,
+      )
+      const sandbox = new ethers.Contract(
+        CONTRACT_ADDRESSES.sandbox,
+        CONTRACT_ABIS.sandbox,
+        provider,
+      )
+
+      const [appliedLogs, snapshotLogs, reserveLogs, priceLogs, outflowLogs] =
+        await Promise.all([
+          controller.queryFilter(
+            controller.filters.ActionApplied(),
+            start,
+            blockNumber,
+          ),
+          controller.queryFilter(
+            controller.filters.SnapshotCreated(),
+            start,
+            blockNumber,
+          ),
+          sandbox.queryFilter(
+            sandbox.filters.ReserveChanged(),
+            start,
+            blockNumber,
+          ),
+          sandbox.queryFilter(
+            sandbox.filters.PriceUpdated(),
+            start,
+            blockNumber,
+          ),
+          sandbox.queryFilter(
+            sandbox.filters.LargeOutflow(),
+            start,
+            blockNumber,
+          ),
+        ])
+
+      const blockCache = new Map<number, number>()
+      const loadTimestamp = async (blockNum: number) => {
+        if (blockCache.has(blockNum)) {
+          return blockCache.get(blockNum)
+        }
+        const block = await provider.getBlock(blockNum)
+        const timestamp = block?.timestamp
+          ? Number(block.timestamp) * 1000
+          : undefined
+        if (timestamp !== undefined) {
+          blockCache.set(blockNum, timestamp)
+        }
+        return timestamp
+      }
+
+      const combinedLogs = [
+        ...appliedLogs.map((log) => ({
+          log,
+          action:
+            ACTION_NAME_MAP[
+              (log.args as { actionType?: string })?.actionType ?? ''
+            ] ??
+            (log.args as { actionType?: string })?.actionType ??
+            'unknown',
+        })),
+        ...snapshotLogs.map((log) => ({
+          log,
+          action: 'snapshot',
+        })),
+        ...reserveLogs.map((log) => ({
+          log,
+          action: SANDBOX_EVENT_MAP.ReserveChanged,
+        })),
+        ...priceLogs.map((log) => ({
+          log,
+          action: SANDBOX_EVENT_MAP.PriceUpdated,
+        })),
+        ...outflowLogs.map((log) => ({
+          log,
+          action: SANDBOX_EVENT_MAP.LargeOutflow,
+        })),
+      ].sort((a, b) => {
+        if (a.log.blockNumber === b.log.blockNumber) {
+          return (a.log.logIndex ?? 0) - (b.log.logIndex ?? 0)
+        }
+        return (a.log.blockNumber ?? 0) - (b.log.blockNumber ?? 0)
+      })
+
+      for (const entry of combinedLogs) {
+        const hash = entry.log.transactionHash
+        if (txMapRef.current.has(hash)) {
           continue
         }
-        for (const tx of block.transactions) {
-          const response =
-            typeof tx === 'string' ? await provider.getTransaction(tx) : tx
-          if (!response) {
-            continue
-          }
-          if (
-            !response.to ||
-            response.to.toLowerCase() !==
-              CONTRACT_ADDRESSES.controller.toLowerCase()
-          ) {
-            continue
-          }
-          if (txMapRef.current.has(response.hash)) {
-            continue
-          }
-          let action = 'unknown'
-          try {
-            const decoded = controllerInterface.parseTransaction({
-              data: response.data,
-            })
-            if (decoded?.name) {
-              action = decoded.name
-            }
-          } catch {
-            action = 'unknown'
-          }
-
-          const receipt = await provider.getTransactionReceipt(response.hash)
-          const status = receipt?.status === 1 ? 'success' : 'revert'
-          const item: ActionTx = {
-            hash: response.hash,
-            action,
-            status,
-            blockNumber: receipt?.blockNumber ?? bn,
-            timestamp: block?.timestamp
-              ? Number(block.timestamp) * 1000
-              : undefined,
-          }
-
-          txMapRef.current.set(response.hash, item)
-          if (ACTION_LABELS[action]) {
-            markAgentsForAction(action)
-          }
-          setTxs((prev) => [item, ...prev].slice(0, MAX_TXS))
+        const timestamp = entry.log.blockNumber
+          ? await loadTimestamp(entry.log.blockNumber)
+          : undefined
+        const item: ActionTx = {
+          hash,
+          action: entry.action,
+          status: 'success',
+          blockNumber: entry.log.blockNumber ?? undefined,
+          timestamp,
         }
+        txMapRef.current.set(hash, item)
+        if (ACTION_LABELS[entry.action]) {
+          markAgentsForAction(entry.action)
+        }
+        setTxs((prev) => [item, ...prev].slice(0, MAX_TXS))
       }
 
       lastBlockRef.current = blockNumber
@@ -139,7 +202,7 @@ export default function useControllerActivity() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to poll chain')
     }
-  }, [controllerInterface, markAgentsForAction, provider])
+  }, [markAgentsForAction, provider])
 
   useEffect(() => {
     if (!provider) {

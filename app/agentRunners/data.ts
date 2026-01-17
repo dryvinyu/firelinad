@@ -18,6 +18,9 @@ export const ACTION_LABELS: Record<string, { label: string; tooltip: string }> =
     freezeOracle: { label: 'FO', tooltip: 'Freeze price oracle' },
     isolate: { label: 'IS', tooltip: 'Isolate external interaction' },
     snapshot: { label: 'SN', tooltip: 'Snapshot critical state' },
+    drain: { label: 'DR', tooltip: 'Drain reserves from sandbox' },
+    priceShock: { label: 'PS', tooltip: 'Apply price shock to sandbox' },
+    reserveChange: { label: 'RC', tooltip: 'Reserve changed on sandbox' },
   }
 
 export const ACTION_SETS = [
