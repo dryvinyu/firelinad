@@ -18,10 +18,14 @@ export default function RunnerStatus({
   chain,
   isConnected,
 }: RunnerStatusProps) {
-  const [lastHeartbeat, setLastHeartbeat] = useState(new Date())
-  const [heartbeatAge, setHeartbeatAge] = useState('0s')
+  const [lastHeartbeat, setLastHeartbeat] = useState<Date | null>(null)
+  const [heartbeatAge, setHeartbeatAge] = useState('—')
 
   useEffect(() => {
+    if (!lastHeartbeat) {
+      setHeartbeatAge('—')
+      return
+    }
     const interval = setInterval(() => {
       const now = new Date()
       const diff = Math.floor((now.getTime() - lastHeartbeat.getTime()) / 1000)
@@ -41,6 +45,7 @@ export default function RunnerStatus({
   // Simulate heartbeat
   useEffect(() => {
     if (isEnabled && isConnected) {
+      setLastHeartbeat(new Date())
       const heartbeatInterval = setInterval(() => {
         setLastHeartbeat(new Date())
       }, 30000)
@@ -94,7 +99,7 @@ export default function RunnerStatus({
             {isEnabled && isConnected ? heartbeatAge : '—'}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            {lastHeartbeat.toLocaleTimeString()}
+            {lastHeartbeat ? lastHeartbeat.toLocaleTimeString() : '—'}
           </div>
         </div>
 

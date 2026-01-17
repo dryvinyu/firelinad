@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   List,
   ExternalLink,
@@ -20,11 +20,21 @@ interface ExecutionLogProps {
 export default function ExecutionLog({ logs, chain }: ExecutionLogProps) {
   const [filter, setFilter] = useState<'all' | 'success' | 'revert'>('all')
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [hasMounted, setHasMounted] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   const filteredLogs = logs.filter((log) => {
     if (filter === 'all') return true
     return log.status === filter
   })
+
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
+  useEffect(() => {
+    setLastUpdated(new Date())
+  }, [logs])
 
   const getExplorerUrl = (txHash: string) => {
     const baseUrl =
@@ -179,7 +189,7 @@ export default function ExecutionLog({ logs, chain }: ExecutionLogProps) {
                   </td>
                   <td className="py-3">
                     <span className="text-sm text-muted-foreground">
-                      {formatTime(log.timestamp)}
+                      {hasMounted ? formatTime(log.timestamp) : '—'}
                     </span>
                   </td>
                   <td className="py-3">
@@ -230,7 +240,8 @@ export default function ExecutionLog({ logs, chain }: ExecutionLogProps) {
           </div>
         </div>
         <span className="text-xs text-muted-foreground">
-          Last updated: {new Date().toLocaleTimeString()}
+          Last updated:{' '}
+          {lastUpdated ? lastUpdated.toLocaleTimeString() : '—'}
         </span>
       </div>
     </div>

@@ -35,11 +35,17 @@ export const useWalletStore = create<WalletState>((set, get) => ({
       return false
     }
     try {
-      // approve
-      await window.ethereum.request({
-        method: 'wallet_requestPermissions',
-        params: [{ eth_accounts: {} }],
-      })
+      if (window.ethereum?.isMetaMask) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_requestPermissions',
+            params: [{ eth_accounts: {} }],
+          })
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('钱包权限请求失败，尝试继续连接', err)
+        }
+      }
       // connect
       const nextAccounts: string[] = await window.ethereum.request({
         method: 'eth_requestAccounts',
@@ -79,16 +85,22 @@ export const useWalletStore = create<WalletState>((set, get) => ({
 
   initializeProviderAndSigner: async (accountAddress: string) => {
     if (typeof window === 'undefined' || !window.ethereum) return
-    const web3Provider = new ethers.BrowserProvider(window.ethereum)
-    const network = await web3Provider.getNetwork()
-    const web3Signer = await web3Provider.getSigner()
+    try {
+      const web3Provider = new ethers.BrowserProvider(window.ethereum)
+      const network = await web3Provider.getNetwork()
+      const web3Signer = await web3Provider.getSigner()
 
-    set({
-      signer: web3Signer,
-      provider: web3Provider,
-      account: accountAddress,
-      chainId: Number(network.chainId),
-    })
+      set({
+        signer: web3Signer,
+        provider: web3Provider,
+        account: accountAddress,
+        chainId: Number(network.chainId),
+      })
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('初始化钱包失败', err)
+      toast.error('初始化钱包失败，请重试')
+    }
   },
 
   handleAccountsChanged: (eventAccounts: string[]) => {
