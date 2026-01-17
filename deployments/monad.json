@@ -1,7 +1,7 @@
 {
   "network": "monad",
-  "sandbox": "0x7a75698f3Df75306ee893De610bAb8822Ea7Df9c",
-  "controller": "0x4fE411D188B31142FF8aAd17D6e9b7D9B1546f62",
-  "decisionNft": "0xF0E2E44a5b17EbA71265201494A7Fa1BEe559A81",
+  "sandbox": "0x1dF342b9360e782668B4D65Ecd5A61eA580A599D",
+  "controller": "0xB7E12fed5c1AE574dD6779cBc4161d8eEC05Ea6B",
+  "decisionNft": "0xA447badBC24FDc3eE6eF5bE05A2e678990d7fFfd",
   "deployer": "0x7E83eea614D75b9ECfCf0c74215B713f0aB8cF99"
 }
