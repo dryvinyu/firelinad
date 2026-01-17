@@ -15,24 +15,8 @@ export default function ActionBar({ lastUpdated }: ActionBarProps) {
   return (
     <div className="relative w-full border-t border-border/50 bg-card/30 backdrop-blur-sm">
       <div className="flex items-center justify-between px-8 py-6">
-        {/* Left side - Main actions */}
-        <div className="flex items-center gap-6">
-          {/* <button onClick={handleSign} className="btn-sign group">
-            <div className="flex flex-col items-center">
-              <span className="text-lg">[SIGN]</span>
-              <span className="text-[10px] opacity-80 mt-1">
-                Scan & Execute
-              </span>
-            </div>
-          </button> */}
-
-          <button className="btn-if group">
-            <div className="flex flex-col items-center">
-              <span className="text-base">[ if ]</span>
-              <span className="text-[10px] opacity-70 mt-1">Consider...</span>
-            </div>
-          </button>
-        </div>
+        {/* Left side - Empty */}
+        <div />
 
         {/* Center - Status */}
         <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
