@@ -9,9 +9,7 @@ export default function Logo() {
         whileHover={{ scale: 1.05, rotate: 5 }}
         className="w-10 h-10 rounded-xl bg-linear-to-br from-primary to-accent flex items-center justify-center"
       >
-        <span className="text-xl font-bold text-primary-foreground">
-          FireLinad
-        </span>
+        <span className="text-xl font-bold text-primary-foreground">F</span>
       </motion.div>
       <span className="text-xl font-bold gradient-text hidden sm:block">
         Firelinad

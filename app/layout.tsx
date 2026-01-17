@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 
 import { Toaster } from '@/components/ui/sonner'
+import { Header } from '@/components/business/Header'
 
 import './globals.css'
 
@@ -23,7 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${fira.variable} antialiased`}>
-        <main className="p-6 hex-pattern">{children}</main>
+        <main className="p-6 hex-pattern">
+          <Header />
+          {children}
+        </main>
         <Toaster richColors position="top-center" />
       </body>
     </html>

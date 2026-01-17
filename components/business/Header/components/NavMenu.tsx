@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const navItems = [
-  { label: 'Agents', path: '/' },
-  { label: '控制台', path: '/console' },
+  { label: 'Agent Runners', path: '/' },
+  { label: 'Console', path: '/console' },
 ]
 
 export default function NavMenu() {
