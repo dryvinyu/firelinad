@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ethers } from 'ethers'
+import { useQuery } from '@tanstack/react-query'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   ACTION_LABELS,
@@ -59,27 +60,21 @@ export default function useControllerActivity() {
     })
   }, [])
 
-  useEffect(() => {
-    const handle = setInterval(() => {
-      const now = Date.now()
-      setActiveAgents((prev) => {
-        const next: Record<string, number> = {}
-        for (const [key, expiry] of Object.entries(prev)) {
-          if (expiry > now) {
-            next[key] = expiry
-          }
-        }
-        return next
-      })
-    }, 1000)
-    return () => clearInterval(handle)
-  }, [])
+  const {
+    data: newTxs,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: [
+      'controllerActivity',
+      CHAIN_CONFIG.rpcUrl,
+      CONTRACT_ADDRESSES.controller,
+    ],
+    queryFn: async () => {
+      if (!provider || !CONTRACT_ADDRESSES.controller) {
+        return []
+      }
 
-  const poll = useCallback(async () => {
-    if (!provider || !CONTRACT_ADDRESSES.controller) {
-      return
-    }
-    try {
       const blockNumber = await provider.getBlockNumber()
       const start =
         lastBlockRef.current === null
@@ -197,29 +192,47 @@ export default function useControllerActivity() {
       }
 
       lastBlockRef.current = blockNumber
+      return foundTxs
+    },
+    enabled: !!provider && !!CONTRACT_ADDRESSES.controller,
+    refetchInterval: POLL_INTERVAL_MS,
+  })
+
+  useEffect(() => {
+    if (newTxs && newTxs.length > 0) {
+      setTxs((prev) => {
+        const updated = [...[...newTxs].reverse(), ...prev].slice(0, MAX_TXS)
+        return updated
+      })
+      for (const tx of newTxs) {
+        if (ACTION_LABELS[tx.action]) {
+          markAgentsForAction(tx.action)
+        }
+      }
       setLastUpdated(new Date())
-      setError(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to poll chain')
+    } else if (newTxs) {
+      // Even if no new txs, update last updated if the poll was successful
+      setLastUpdated(new Date())
     }
   }, [markAgentsForAction, provider])
 
   useEffect(() => {
-    if (!provider) {
-      return
+    if (queryError) {
+      setError(
+        queryError instanceof Error
+          ? queryError.message
+          : 'Unable to poll chain',
+      )
+    } else {
+      setError(null)
     }
-    void poll()
-    const handle = setInterval(() => {
-      void poll()
-    }, POLL_INTERVAL_MS)
-    return () => clearInterval(handle)
-  }, [poll, provider])
+  }, [queryError])
 
   return {
     txs,
     error,
     activeAgents,
     lastUpdated,
-    refresh: poll,
+    refresh: refetch,
   }
 }
