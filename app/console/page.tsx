@@ -17,12 +17,16 @@ import {
   CONTRACT_ABIS,
   CONTRACT_ADDRESSES,
 } from '@/lib/contracts'
+import { RUNNER_CONFIG } from '@/lib/runnerConfig'
 
 export default function Console() {
   const { chainId, isConnected, signer, switchNetwork } = useWallet()
   const protocolState = useProtocolState()
   const { txs, error: executionError } = useControllerActivity()
   const autoRunner = useAutoRunner({ signer, isConnected, chainId })
+  const [withdrawLimitBps, setWithdrawLimitBps] = useState(
+    RUNNER_CONFIG.withdrawLimitBps,
+  )
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean
     action: string
@@ -98,10 +102,8 @@ export default function Console() {
       if (action === 'pausePool') {
         await controller.pausePool()
       } else if (action === 'setWithdrawLimit') {
-        if (protocolState.withdrawLimitBps === null) {
-          throw new Error('Withdraw limit unavailable')
-        }
-        await controller.setWithdrawLimit(protocolState.withdrawLimitBps)
+        const bps = Math.min(Math.max(withdrawLimitBps, 0), 10000)
+        await controller.setWithdrawLimit(bps)
       } else if (action === 'freezeOracle') {
         await controller.freezeOracle()
       } else if (action === 'isolate') {
@@ -153,7 +155,11 @@ export default function Console() {
       {/* Middle Section - Parameters & Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 my-6">
         <RuleParameters state={protocolState} />
-        <ManualActions onAction={handleManualAction} />
+        <ManualActions
+          onAction={handleManualAction}
+          withdrawLimitBps={withdrawLimitBps}
+          onWithdrawLimitChange={setWithdrawLimitBps}
+        />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <OwnerActions onAction={handleManualAction} />

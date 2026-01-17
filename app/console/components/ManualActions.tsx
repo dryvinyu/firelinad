@@ -9,6 +9,8 @@ import {
 
 interface ManualActionsProps {
   onAction: (action: string) => void
+  withdrawLimitBps: number
+  onWithdrawLimitChange: (value: number) => void
 }
 
 const actions = [
@@ -85,7 +87,11 @@ const colorClasses: Record<
   },
 }
 
-export default function ManualActions({ onAction }: ManualActionsProps) {
+export default function ManualActions({
+  onAction,
+  withdrawLimitBps,
+  onWithdrawLimitChange,
+}: ManualActionsProps) {
   return (
     <div className="console-panel p-4 md:p-6 h-fit">
       <div className="flex items-center gap-2 mb-4">
@@ -99,7 +105,7 @@ export default function ManualActions({ onAction }: ManualActionsProps) {
         Emergency actions require confirmation. Use with caution.
       </p>
 
-      <div className="grid grid-cols-2 md:grid-cols-1 xl:grid-cols-2 gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {actions.map((action) => {
           const Icon = action.icon
           const colors = colorClasses[action.color]
@@ -109,22 +115,19 @@ export default function ManualActions({ onAction }: ManualActionsProps) {
               key={action.id}
               onClick={() => onAction(action.id)}
               className={`
-                group relative p-4 rounded-lg border-2 transition-all duration-300
+                group relative px-4 py-3 rounded-lg border-2 transition-all duration-300
                 ${colors.bg} ${colors.border} ${colors.shadow}
                 hover:scale-[1.02] active:scale-[0.98]
               `}
             >
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-2">
                 <div className={`p-2 rounded-lg ${colors.bg}`}>
-                  <Icon className={`w-6 h-6 ${colors.text}`} />
+                  <Icon className={`w-5 h-5 ${colors.text}`} />
                 </div>
                 <span
                   className={`text-sm font-bold tracking-wider ${colors.text}`}
                 >
                   {action.label}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {action.description}
                 </span>
               </div>
 
@@ -135,6 +138,31 @@ export default function ManualActions({ onAction }: ManualActionsProps) {
             </button>
           )
         })}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground uppercase tracking-wider">
+            Withdraw Limit
+          </span>
+          <input
+            type="number"
+            min={0}
+            max={10000}
+            value={withdrawLimitBps}
+            onChange={(e) =>
+              onWithdrawLimitChange(Number.parseInt(e.target.value || '0', 10))
+            }
+            className="console-input w-24"
+          />
+          <span className="text-xs text-muted-foreground">bps</span>
+        </div>
+        <button
+          onClick={() => onAction('setWithdrawLimit')}
+          className="px-4 py-2 rounded-lg border border-yellow-500/50 text-yellow-300 text-xs font-bold uppercase tracking-wider hover:bg-yellow-500/10"
+        >
+          Apply Limit
+        </button>
       </div>
 
       {/* Warning notice */}
