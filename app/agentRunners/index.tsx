@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import DaoEntry from './components/DaoEntry'
 import ActionBar from './components/ActionBar'
 import ChatModal from './components/ChatModal'
 import ChatButton from './components/ChatButton'
@@ -55,9 +56,10 @@ export default function AgentRunners() {
       <ActionBar lastUpdated={lastUpdated} onRefresh={refresh} />
 
       <ChatButton
-        onClick={() => setIsChatOpen(!isChatOpen)}
         isOpen={isChatOpen}
+        onClick={() => setIsChatOpen(!isChatOpen)}
       />
+      <DaoEntry />
       <ChatModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </section>
   )
