@@ -6,11 +6,15 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
-export default function ActionBar() {
+type ActionBarProps = {
+  onRefresh?: () => void
+  lastUpdated?: Date | null
+}
+
+export default function ActionBar({ onRefresh, lastUpdated }: ActionBarProps) {
   const handleSign = () => {
-    // Trigger the launchpad
-    if ((window as any).triggerLaunch) {
-      ;(window as any).triggerLaunch()
+    if (onRefresh) {
+      onRefresh()
     }
   }
 
@@ -39,11 +43,16 @@ export default function ActionBar() {
         </div>
 
         {/* Center - Status */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+        <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
           <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
           <span className="font-mono text-xs text-muted-foreground">
             SYSTEM READY
           </span>
+          {lastUpdated ? (
+            <span className="font-mono text-[10px] text-muted-foreground/70">
+              Updated {lastUpdated.toLocaleTimeString()}
+            </span>
+          ) : null}
         </div>
 
         {/* Right side - Mint NFT */}

@@ -1,51 +1,70 @@
-import { ArrowUp, Eye, Bomb, Zap, Terminal, Flag } from 'lucide-react'
+import {
+  ArrowUp,
+  Droplet,
+  Shield,
+  Lock,
+  Archive,
+  ShieldOff,
+} from 'lucide-react'
+import { AGENT_DEFINITIONS } from '@/app/agentRunners/data'
 
 interface Agent {
   id: string
   name: string
-  status: string
   variant: 'purple' | 'cyan'
   icon: React.ElementType
+  actions: string[]
 }
 
 const agents: Agent[] = [
   {
-    id: 'lookout',
-    name: 'LOOKOUT',
-    status: 'SCANNING',
+    id: 'flood',
+    name: AGENT_DEFINITIONS[0].name,
+    actions: AGENT_DEFINITIONS[0].actions,
     variant: 'purple',
-    icon: Eye,
+    icon: Droplet,
   },
-  { id: 'bomb', name: 'BOMB', status: 'ARMED', variant: 'purple', icon: Bomb },
   {
-    id: 'booster',
-    name: 'BOOSTER',
-    status: 'READY',
+    id: 'bulwark',
+    name: AGENT_DEFINITIONS[1].name,
+    actions: AGENT_DEFINITIONS[1].actions,
     variant: 'cyan',
-    icon: Zap,
+    icon: Shield,
   },
   {
-    id: 'cmd',
-    name: 'CMD',
-    status: 'ACTIVE',
+    id: 'lock',
+    name: AGENT_DEFINITIONS[2].name,
+    actions: AGENT_DEFINITIONS[2].actions,
     variant: 'purple',
-    icon: Terminal,
+    icon: Lock,
   },
   {
-    id: 'final',
-    name: 'FINAL',
-    status: 'STANDBY',
+    id: 'vault',
+    name: AGENT_DEFINITIONS[3].name,
+    actions: AGENT_DEFINITIONS[3].actions,
     variant: 'cyan',
-    icon: Flag,
+    icon: Archive,
+  },
+  {
+    id: 'isolate',
+    name: AGENT_DEFINITIONS[4].name,
+    actions: AGENT_DEFINITIONS[4].actions,
+    variant: 'purple',
+    icon: ShieldOff,
   },
 ]
 
-export default function AgentStatusBar() {
+type AgentStatusBarProps = {
+  activeAgents: Record<string, number>
+}
+
+export default function AgentStatusBar({ activeAgents }: AgentStatusBarProps) {
   return (
     <div className="w-full border-b border-border/50 bg-card/30 backdrop-blur-sm">
       <div className="flex items-center justify-center gap-6 px-6 py-5">
         {agents.map((agent) => {
           const Icon = agent.icon
+          const isActive = Boolean(activeAgents[agent.name])
           return (
             <div
               key={agent.id}
@@ -57,12 +76,17 @@ export default function AgentStatusBar() {
                 <Icon className="w-4 h-4" />
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                    <span className="status-indicator" />
+                    <span
+                      className={`status-indicator ${isActive ? '' : 'opacity-30'}`}
+                    />
                     <span className="text-xs">{agent.name}</span>
                   </div>
                   <div className="flex items-center gap-1 text-[9px] opacity-70 mt-0.5">
                     <ArrowUp className="w-2.5 h-2.5 animate-pull-indicator" />
-                    <span>{agent.status}</span>
+                    <span>{isActive ? 'ACTIVE' : 'STANDBY'}</span>
+                  </div>
+                  <div className="text-[9px] opacity-60 mt-1">
+                    {agent.actions.join(', ')}
                   </div>
                 </div>
               </div>

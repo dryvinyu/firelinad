@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 const navItems = [
   { label: 'Agent Runners', path: '/' },
   { label: 'Console', path: '/console' },
+  { label: 'Attack', path: '/attack' },
 ]
 
 export default function NavMenu() {

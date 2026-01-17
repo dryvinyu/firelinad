@@ -14,10 +14,13 @@ import type { LogEntry } from '@/lib/types'
 
 interface ExecutionLogProps {
   logs: LogEntry[]
-  chain: string
+  explorerBaseUrl: string
 }
 
-export default function ExecutionLog({ logs, chain }: ExecutionLogProps) {
+export default function ExecutionLog({
+  logs,
+  explorerBaseUrl,
+}: ExecutionLogProps) {
   const [filter, setFilter] = useState<'all' | 'success' | 'revert'>('all')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [hasMounted, setHasMounted] = useState(false)
@@ -37,10 +40,7 @@ export default function ExecutionLog({ logs, chain }: ExecutionLogProps) {
   }, [logs])
 
   const getExplorerUrl = (txHash: string) => {
-    const baseUrl =
-      chain === 'Mainnet'
-        ? 'https://etherscan.io/tx/'
-        : 'https://sepolia.etherscan.io/tx/'
+    const baseUrl = explorerBaseUrl || 'https://sepolia.etherscan.io/tx/'
     return `${baseUrl}${txHash}`
   }
 
@@ -86,7 +86,6 @@ export default function ExecutionLog({ logs, chain }: ExecutionLogProps) {
           </span>
         </div>
 
-        {/* Filter buttons */}
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-muted-foreground" />
           <div className="flex gap-1">
@@ -111,7 +110,6 @@ export default function ExecutionLog({ logs, chain }: ExecutionLogProps) {
         </div>
       </div>
 
-      {/* Log table */}
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -189,7 +187,7 @@ export default function ExecutionLog({ logs, chain }: ExecutionLogProps) {
                   </td>
                   <td className="py-3">
                     <span className="text-sm text-muted-foreground">
-                      {hasMounted ? formatTime(log.timestamp) : '—'}
+                      {hasMounted ? formatTime(log.timestamp) : 'N/A'}
                     </span>
                   </td>
                   <td className="py-3">
@@ -223,7 +221,6 @@ export default function ExecutionLog({ logs, chain }: ExecutionLogProps) {
         </table>
       </div>
 
-      {/* Footer status bar */}
       <div className="mt-4 pt-4 border-t border-console-border flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -240,8 +237,7 @@ export default function ExecutionLog({ logs, chain }: ExecutionLogProps) {
           </div>
         </div>
         <span className="text-xs text-muted-foreground">
-          Last updated:{' '}
-          {lastUpdated ? lastUpdated.toLocaleTimeString() : '—'}
+          Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : 'N/A'}
         </span>
       </div>
     </div>

@@ -3,11 +3,21 @@ import ActionBar from './components/ActionBar'
 import AgentStatusBar from './components/AgentStatusBar'
 import LaunchpadRails from './components/LaunchpadRails'
 import ExecutionSummary from './components/ExecutionSummary'
+import useControllerActivity from './hooks/useControllerActivity'
+import { ACTION_LABELS, ACTION_SETS } from './data'
 
 export default function AgentRunners() {
+  const { txs, activeAgents, error, lastUpdated, refresh } =
+    useControllerActivity()
+
   return (
     <section className="bg-background cyber-grid scanline flex flex-col">
-      <AgentStatusBar />
+      <AgentStatusBar activeAgents={activeAgents} />
+      {error ? (
+        <div className="px-6 py-3 text-sm text-destructive/90 border-b border-border/30">
+          {error}
+        </div>
+      ) : null}
 
       <div className="flex-1 flex">
         {/* Left Panel - Launchpad */}
@@ -18,7 +28,7 @@ export default function AgentRunners() {
             </h2>
           </div>
           <div className="flex-1 flex items-center justify-center p-6">
-            <LaunchpadRails />
+            <LaunchpadRails txs={txs} actionLabels={ACTION_LABELS} />
           </div>
         </div>
 
@@ -30,12 +40,15 @@ export default function AgentRunners() {
             </h2>
           </div>
           <div className="flex-1 p-6">
-            <ExecutionSummary />
+            <ExecutionSummary
+              actionSets={ACTION_SETS}
+              actionLabels={ACTION_LABELS}
+            />
           </div>
         </div>
       </div>
 
-      <ActionBar />
+      <ActionBar lastUpdated={lastUpdated} onRefresh={refresh} />
     </section>
   )
 }
