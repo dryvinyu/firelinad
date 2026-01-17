@@ -13,8 +13,8 @@ import {
   CONTRACT_ADDRESSES,
 } from '@/lib/contracts'
 
-const POLL_INTERVAL_MS = 6000
 const LOOKBACK_BLOCKS = 5
+const POLL_INTERVAL_MS = 6000
 
 export default function useControllerActivity() {
   const [txs, setTxs] = useState<ActionTx[]>([])
