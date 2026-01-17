@@ -141,9 +141,13 @@ export default function useControllerActivity() {
           log,
           action:
             ACTION_NAME_MAP[
-              (log.args as { actionType?: string })?.actionType ?? ''
+              'args' in log
+                ? ((log.args as { actionType?: string })?.actionType ?? '')
+                : ''
             ] ??
-            (log.args as { actionType?: string })?.actionType ??
+            ('args' in log
+              ? ((log.args as { actionType?: string })?.actionType ?? '')
+              : '') ??
             'unknown',
         })),
         ...snapshotLogs.map((log) => ({
@@ -164,11 +168,12 @@ export default function useControllerActivity() {
         })),
       ].sort((a, b) => {
         if (a.log.blockNumber === b.log.blockNumber) {
-          return (a.log.logIndex ?? 0) - (b.log.logIndex ?? 0)
+          return (a.log.index ?? 0) - (b.log.index ?? 0)
         }
         return (a.log.blockNumber ?? 0) - (b.log.blockNumber ?? 0)
       })
 
+      const foundTxs: ActionTx[] = []
       for (const entry of combinedLogs) {
         const hash = entry.log.transactionHash
         if (txMapRef.current.has(hash)) {
@@ -185,10 +190,7 @@ export default function useControllerActivity() {
           timestamp,
         }
         txMapRef.current.set(hash, item)
-        if (ACTION_LABELS[entry.action]) {
-          markAgentsForAction(entry.action)
-        }
-        setTxs((prev) => [item, ...prev].slice(0, MAX_TXS))
+        foundTxs.push(item)
       }
 
       lastBlockRef.current = blockNumber
@@ -214,7 +216,7 @@ export default function useControllerActivity() {
       // Even if no new txs, update last updated if the poll was successful
       setLastUpdated(new Date())
     }
-  }, [markAgentsForAction, provider])
+  }, [newTxs, markAgentsForAction])
 
   useEffect(() => {
     if (queryError) {

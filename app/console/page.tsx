@@ -114,7 +114,7 @@ export default function Console() {
         }
         const limit =
           protocolState.withdrawLimitBps === null
-            ? 10000n
+            ? BigInt(10000)
             : protocolState.withdrawLimitBps
         await sandbox.resetDemoState(
           protocolState.reserve,
