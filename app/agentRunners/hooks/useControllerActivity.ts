@@ -14,7 +14,7 @@ import {
   CONTRACT_ADDRESSES,
 } from '@/lib/contracts'
 
-const LOOKBACK_BLOCKS = 5
+const LOOKBACK_BLOCKS = 20
 const POLL_INTERVAL_MS = 2_000
 
 export default function useControllerActivity() {
@@ -164,22 +164,6 @@ export default function useControllerActivity() {
       setError(null)
     }
   }, [queryError])
-
-  useEffect(() => {
-    const handle = setInterval(() => {
-      const now = Date.now()
-      setActiveAgents((prev) => {
-        const next: Record<string, number> = {}
-        for (const [key, expiry] of Object.entries(prev)) {
-          if (expiry > now) {
-            next[key] = expiry
-          }
-        }
-        return next
-      })
-    }, 1000)
-    return () => clearInterval(handle)
-  }, [])
 
   return {
     txs,
