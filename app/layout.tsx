@@ -3,6 +3,7 @@ import localFont from 'next/font/local'
 
 import { Toaster } from '@/components/ui/sonner'
 import { Header } from '@/components/business/Header'
+import QueryProvider from '@/components/providers/QueryProvider'
 
 import './globals.css'
 
@@ -26,7 +27,7 @@ export default function RootLayout({
       <body className={`${fira.variable} antialiased`}>
         <main className="p-6 hex-pattern">
           <Header />
-          {children}
+          <QueryProvider>{children}</QueryProvider>
         </main>
         <Toaster richColors position="top-center" />
       </body>
