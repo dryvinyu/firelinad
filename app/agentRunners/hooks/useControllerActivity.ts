@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ethers } from 'ethers'
+import { useQuery } from '@tanstack/react-query'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   ACTION_LABELS,
@@ -14,7 +15,7 @@ import {
 } from '@/lib/contracts'
 
 const LOOKBACK_BLOCKS = 5
-const POLL_INTERVAL_MS = 6000
+const POLL_INTERVAL_MS = 2_000
 
 export default function useControllerActivity() {
   const [txs, setTxs] = useState<ActionTx[]>([])
@@ -53,32 +54,28 @@ export default function useControllerActivity() {
     })
   }, [])
 
-  useEffect(() => {
-    const handle = setInterval(() => {
-      const now = Date.now()
-      setActiveAgents((prev) => {
-        const next: Record<string, number> = {}
-        for (const [key, expiry] of Object.entries(prev)) {
-          if (expiry > now) {
-            next[key] = expiry
-          }
-        }
-        return next
-      })
-    }, 1000)
-    return () => clearInterval(handle)
-  }, [])
+  const {
+    data: newTxs,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: [
+      'controllerActivity',
+      CHAIN_CONFIG.rpcUrl,
+      CONTRACT_ADDRESSES.controller,
+    ],
+    queryFn: async () => {
+      if (!provider || !CONTRACT_ADDRESSES.controller) {
+        return []
+      }
 
-  const poll = useCallback(async () => {
-    if (!provider || !CONTRACT_ADDRESSES.controller) {
-      return
-    }
-    try {
       const blockNumber = await provider.getBlockNumber()
       const start =
         lastBlockRef.current === null
           ? Math.max(blockNumber - LOOKBACK_BLOCKS, 0)
           : lastBlockRef.current + 1
+
+      const foundTxs: ActionTx[] = []
 
       for (let bn = start; bn <= blockNumber; bn += 1) {
         const block = await provider.getBlock(bn, true)
@@ -101,6 +98,7 @@ export default function useControllerActivity() {
           if (txMapRef.current.has(response.hash)) {
             continue
           }
+
           let action = 'unknown'
           try {
             const decoded = controllerInterface.parseTransaction({
@@ -125,38 +123,69 @@ export default function useControllerActivity() {
               : undefined,
           }
 
+          foundTxs.push(item)
           txMapRef.current.set(response.hash, item)
-          if (ACTION_LABELS[action]) {
-            markAgentsForAction(action)
-          }
-          setTxs((prev) => [item, ...prev].slice(0, MAX_TXS))
         }
       }
 
       lastBlockRef.current = blockNumber
-      setLastUpdated(new Date())
-      setError(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to poll chain')
-    }
-  }, [controllerInterface, markAgentsForAction, provider])
+      return foundTxs
+    },
+    enabled: !!provider && !!CONTRACT_ADDRESSES.controller,
+    refetchInterval: POLL_INTERVAL_MS,
+  })
 
   useEffect(() => {
-    if (!provider) {
-      return
+    if (newTxs && newTxs.length > 0) {
+      setTxs((prev) => {
+        const updated = [...[...newTxs].reverse(), ...prev].slice(0, MAX_TXS)
+        return updated
+      })
+      for (const tx of newTxs) {
+        if (ACTION_LABELS[tx.action]) {
+          markAgentsForAction(tx.action)
+        }
+      }
+      setLastUpdated(new Date())
+    } else if (newTxs) {
+      // Even if no new txs, update last updated if the poll was successful
+      setLastUpdated(new Date())
     }
-    void poll()
+  }, [newTxs, markAgentsForAction])
+
+  useEffect(() => {
+    if (queryError) {
+      setError(
+        queryError instanceof Error
+          ? queryError.message
+          : 'Unable to poll chain',
+      )
+    } else {
+      setError(null)
+    }
+  }, [queryError])
+
+  useEffect(() => {
     const handle = setInterval(() => {
-      void poll()
-    }, POLL_INTERVAL_MS)
+      const now = Date.now()
+      setActiveAgents((prev) => {
+        const next: Record<string, number> = {}
+        for (const [key, expiry] of Object.entries(prev)) {
+          if (expiry > now) {
+            next[key] = expiry
+          }
+        }
+        return next
+      })
+    }, 1000)
     return () => clearInterval(handle)
-  }, [poll, provider])
+  }, [])
 
   return {
     txs,
     error,
     activeAgents,
     lastUpdated,
-    refresh: poll,
+    refresh: refetch,
   }
 }
