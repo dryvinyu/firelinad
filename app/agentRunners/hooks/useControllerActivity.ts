@@ -233,8 +233,8 @@ export default function useControllerActivity() {
   return {
     txs,
     error,
-    activeAgents,
     lastUpdated,
+    activeAgents,
     refresh: refetch,
   }
 }
