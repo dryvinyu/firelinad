@@ -22,13 +22,13 @@ export default function ExecutionSummary({
       key: `${set.name}-${setIndex}-title`,
       text: set.name,
       critical: false,
-      type: 'title',
+      type: 'title' as const,
     },
     ...set.items.map((item, itemIndex) => ({
       key: `${set.name}-${item}-${itemIndex}`,
       text: actionLabels[item]?.tooltip ?? item,
       critical: CRITICAL_ACTIONS.has(item),
-      type: 'item',
+      type: 'item' as const,
     })),
   ])
 
