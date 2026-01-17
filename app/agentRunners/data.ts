@@ -23,17 +23,6 @@ export const ACTION_LABELS: Record<string, { label: string; tooltip: string }> =
     reserveChange: { label: 'RC', tooltip: 'Reserve changed on sandbox' },
   }
 
-export const ACTION_SETS = [
-  {
-    name: 'Action Set A',
-    items: ['setWithdrawLimit', 'pausePool', 'snapshot'],
-  },
-  {
-    name: 'Action Set B',
-    items: ['freezeOracle', 'isolate', 'snapshot'],
-  },
-]
-
 export const AGENT_DEFINITIONS = [
   { name: 'FLOOD', actions: ['setWithdrawLimit', 'pausePool'] },
   { name: 'BULWARK', actions: ['freezeOracle', 'isolate'] },

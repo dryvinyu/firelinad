@@ -15,7 +15,7 @@ import {
 } from '@/lib/contracts'
 
 const POLL_INTERVAL_MS = 10000
-const LOOKBACK_BLOCKS = 50
+const LOOKBACK_BLOCKS = 30
 const ACTION_NAME_MAP: Record<string, string> = {
   pause: 'pausePool',
   limit: 'setWithdrawLimit',

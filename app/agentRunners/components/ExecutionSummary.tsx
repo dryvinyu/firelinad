@@ -1,8 +1,9 @@
 import { ChevronRight, AlertTriangle } from 'lucide-react'
 import { CRITICAL_ACTIONS } from '@/app/agentRunners/data'
+import type { ActionTx } from '@/app/agentRunners/data'
 
 type ExecutionSummaryProps = {
-  actionSets: { name: string; items: string[] }[]
+  txs: ActionTx[]
   actionLabels: Record<string, { label: string; tooltip: string }>
 }
 
@@ -14,9 +15,41 @@ type SummaryRow = {
 }
 
 export default function ExecutionSummary({
-  actionSets,
+  txs,
   actionLabels,
 }: ExecutionSummaryProps) {
+  const buckets = new Map<string, { name: string; items: string[] }>()
+  const orderedBuckets: string[] = []
+
+  for (const tx of txs) {
+    if (!actionLabels[tx.action]) {
+      continue
+    }
+    const bucketKey =
+      tx.blockNumber !== undefined
+        ? `block-${tx.blockNumber}`
+        : `time-${Math.floor((tx.timestamp ?? 0) / 60000)}`
+    if (!buckets.has(bucketKey)) {
+      buckets.set(bucketKey, {
+        name: `Event Set ${orderedBuckets.length + 1}`,
+        items: [],
+      })
+      orderedBuckets.push(bucketKey)
+    }
+    const bucket = buckets.get(bucketKey)
+    if (!bucket) {
+      continue
+    }
+    if (!bucket.items.includes(tx.action)) {
+      bucket.items.push(tx.action)
+    }
+  }
+
+  const actionSets = orderedBuckets
+    .map((key) => buckets.get(key))
+    .filter(Boolean)
+    .slice(0, 3) as { name: string; items: string[] }[]
+
   const summaryRows = actionSets.flatMap<SummaryRow>((set, setIndex) => [
     {
       key: `${set.name}-${setIndex}-title`,

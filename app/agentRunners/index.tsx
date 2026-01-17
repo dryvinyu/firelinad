@@ -4,7 +4,7 @@ import AgentStatusBar from './components/AgentStatusBar'
 import LaunchpadRails from './components/LaunchpadRails'
 import ExecutionSummary from './components/ExecutionSummary'
 import useControllerActivity from './hooks/useControllerActivity'
-import { ACTION_LABELS, ACTION_SETS } from './data'
+import { ACTION_LABELS } from './data'
 
 export default function AgentRunners() {
   const { txs, activeAgents, error, lastUpdated, refresh } =
@@ -40,10 +40,7 @@ export default function AgentRunners() {
             </h2>
           </div>
           <div className="flex-1 p-6">
-            <ExecutionSummary
-              actionSets={ACTION_SETS}
-              actionLabels={ACTION_LABELS}
-            />
+            <ExecutionSummary txs={txs} actionLabels={ACTION_LABELS} />
           </div>
         </div>
       </div>
